@@ -1,6 +1,26 @@
 // backend/index.js
+import mysql from 'mysql2';
+import dotenv from 'dotenv';
 import express from 'express';
 import cors from 'cors';
+
+dotenv.config();
+
+// Create MySQL connection using env variables
+const connection = mysql.createConnection({
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
+});
+
+connection.connect(err => {
+  if (err) {
+    console.error('Database connection failed:', err);
+  } else {
+    console.log('Database connected successfully!');
+  }
+});
 
 const app = express();
 
@@ -16,9 +36,18 @@ app.get('/', (req, res) => {
   res.json({ message: 'Backend API is running!' });
 });
 
-// Example API route
 app.get('/health', (req, res) => {
   res.json({ status: 'OK', timestamp: new Date() });
+});
+
+// Optional test-db route to check DB connection
+app.get('/test-db', (req, res) => {
+  connection.query('SELECT 1 + 1 AS solution', (err, results) => {
+    if (err) {
+      return res.status(500).json({ error: err.message });
+    }
+    res.json({ result: results[0].solution });
+  });
 });
 
 // Start server
